@@ -7,6 +7,7 @@ handles one heavy request at a time (others queue).
 from __future__ import annotations
 
 import asyncio
+import gc
 import io
 import logging
 import os
@@ -29,10 +30,15 @@ MAX_FILE_BYTES = 10 * 1024 * 1024
 # Multipart framing overhead allowance for the Content-Length pre-check.
 BODY_SLACK_BYTES = 1024 * 1024
 READ_CHUNK_BYTES = 1024 * 1024
-MAX_SIDE = 2048
+MAX_SIDE = 1536
 # Reject decompression-bomb style payloads before allocating decoded buffers.
-MAX_DECODE_PIXELS = 25_000_000
+# 1536² ≈ 2.4 Mpx; 8 Mpx gives ample headroom for tall/wide aspect ratios
+# while keeping the decoded RGB buffer under ~24 MB.
+MAX_DECODE_PIXELS = 8_000_000
 Image.MAX_IMAGE_PIXELS = MAX_DECODE_PIXELS
+# Refuse new work when RSS is already close to the 512 MB free-tier ceiling.
+# The ONNX forward pass itself adds ~100 MB on top of the baseline.
+RSS_REJECT_MB = 420
 ALLOWED_EXT = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 
@@ -174,15 +180,34 @@ async def sketch(request: Request, file: UploadFile = File(...)):
             content={"detail": "文件内容与图片格式不符，请上传真实的图片文件"},
         )
 
-    try:
-        img = decode_and_normalize(data)
-    except ValueError as exc:
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
     pipe = get_pipeline()
     started = time.perf_counter()
+
+    # Decode + inference happen inside the semaphore so that queued requests
+    # don't each hold a decoded image in memory — only the raw upload bytes
+    # (≤ MAX_FILE_BYTES) are retained while waiting.
     async with _inference_semaphore:
-        lineart = await asyncio.to_thread(pipe.process, img)
+        rss_before = current_rss_mb()
+        if rss_before is not None and rss_before > RSS_REJECT_MB:
+            logger.warning("reject: rss %.0fMB > %dMB", rss_before, RSS_REJECT_MB)
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "服务器正忙，请稍候几秒再重试"},
+            )
+
+        def decode_and_run():
+            img = decode_and_normalize(data)
+            return pipe.process(img)
+
+        try:
+            lineart = await asyncio.to_thread(decode_and_run)
+        except ValueError as exc:
+            return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+        # Release ONNX / numpy intermediates promptly so the next request
+        # starts from a low baseline instead of fragmenting the heap.
+        gc.collect()
+
     rss = current_rss_mb()
     safe_name = re.sub(r"[\r\n\t]", "_", filename)[:120]
     logger.info(

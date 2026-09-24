@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/backend \
     OMP_NUM_THREADS=2 \
     LINEART_CPU_ARENA=0 \
-    LINEART_RESOLUTION=704
+    LINEART_RESOLUTION=640
 
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt

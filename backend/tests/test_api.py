@@ -9,7 +9,7 @@ from pathlib import Path
 from PIL import Image
 from fastapi.testclient import TestClient
 
-from app.main import MAX_FILE_BYTES, app
+from app.main import MAX_FILE_BYTES, MAX_SIDE, app
 
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLES = ROOT / "samples" / "input"
@@ -47,7 +47,12 @@ def test_valid_formats_match_original_size():
     for name, mime in cases:
         data = (SAMPLES / name).read_bytes()
         with Image.open(io.BytesIO(data)) as src:
-            expected = src.size
+            w, h = src.size
+            scale = MAX_SIDE / max(w, h)
+            if scale < 1:
+                expected = (max(1, round(w * scale)), max(1, round(h * scale)))
+            else:
+                expected = src.size
         r = _post(name, data, mime)
         assert r.status_code == 200, (name, r.text)
         assert r.headers["content-type"] == "image/png"
