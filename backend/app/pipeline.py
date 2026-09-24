@@ -53,10 +53,15 @@ class LineartPipeline:
         )
         # Final white-point "levels" on the white-on-black edge map: weak
         # texture below the black point becomes pure white after inversion,
-        # strong lines above the white point become pure black. Tuned on the
-        # 5-image evaluation set (samples/out/sweep_*.png); see evaluation.md.
-        self.levels_black = int(os.environ.get("LINEART_LEVEL_BLACK", "40"))
+        # strong lines above the white point become pure black. black=60 was
+        # chosen with the input denoise below: blurry/noisy photos otherwise
+        # produce blotchy disconnected patches (see samples/out/blur_sweep_*).
+        self.levels_black = int(os.environ.get("LINEART_LEVEL_BLACK", "60"))
         self.levels_white = int(os.environ.get("LINEART_LEVEL_WHITE", "200"))
+        # Mild gaussian denoise before edge detection: suppresses the sensor
+        # noise / JPEG grain that blurry photos turn into speckled edges.
+        # 0 disables (restores the exact reference AnyLine behaviour).
+        self.denoise_sigma = float(os.environ.get("LINEART_DENOISE_SIGMA", "1.0"))
 
         so = ort.SessionOptions()
         so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
@@ -82,6 +87,8 @@ class LineartPipeline:
         x = np.asarray(pil_image.convert("RGB"), dtype=np.uint8)
         orig_h, orig_w = x.shape[:2]
 
+        if self.denoise_sigma > 0:
+            x = cv2.GaussianBlur(x, (0, 0), self.denoise_sigma)
         x = resize_image(x, self.detect_resolution)
         h, w = x.shape[:2]
         if h % self.input_multiple or w % self.input_multiple:
