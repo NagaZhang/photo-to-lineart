@@ -1,0 +1,15 @@
+# Build-stage dependencies: used once to download pretrained weights and
+# export the ONNX model. NOT installed in the runtime image.
+#
+# CPU-only PyTorch wheels (also works on Windows for local development).
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+-r requirements.txt
+
+torch>=2.6,<3.0
+torchvision>=0.21
+onnx>=1.16
+# PyPI distribution "controlnet-aux" (import name: controlnet_aux),
+# a mature standalone packaging of the ControlNet preprocessors.
+controlnet-aux>=0.0.9
+huggingface_hub>=0.25

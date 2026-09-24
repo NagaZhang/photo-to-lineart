@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Model weights and exported models (downloaded / generated at build time)
+backend/assets/*.onnx
+backend/assets/*.pth
+backend/assets/*.ckpt
+backend/assets/*.safetensors
+
+# Evaluation inputs/outputs (third-party images kept locally, not redistributed)
+samples/input/
+samples/out/
+
+# OS / editor
+.DS_Store
+Thumbs.db/
+.idea/
+.vscode/
+
+# Trae spec workflow artifacts (local only)
+.trae/
+
+# Env
+.env
+*.log

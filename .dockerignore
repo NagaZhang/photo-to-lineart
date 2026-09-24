@@ -1,0 +1,12 @@
+.git/
+.venv/
+.trae/
+samples/
+**/__pycache__/
+**/*.pyc
+*.log
+# Weights and exported artifacts are (re)produced inside the build stage.
+backend/assets/*.onnx
+backend/assets/*.pth
+backend/assets/*.pt
+frontend/.gitkeep

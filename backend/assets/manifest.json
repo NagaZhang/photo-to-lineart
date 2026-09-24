@@ -1,0 +1,8 @@
+{
+  "model": "anyline",
+  "opset": 17,
+  "input_multiple": 8,
+  "input_range": "0_255",
+  "outputs": 4,
+  "source": "TheMistoAI/MistoLine Anyline/MTEED.pth (TEED)"
+}

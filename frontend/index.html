@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>速写生成器 · 图片转线稿</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 75 C40 25,60 25,80 75' stroke='%232563eb' stroke-width='8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>速写生成器</h1>
+    <p class="subtitle">上传一张图片，生成高度还原细节的线稿（白底黑线 PNG）</p>
+  </header>
+
+  <main class="container">
+    <section id="upload-panel" class="panel">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button"
+           aria-label="选择图片，也可以拖拽或粘贴到此处">
+        <div class="dropzone-inner">
+          <svg class="upload-icon" viewBox="0 0 48 48" width="56" height="56" aria-hidden="true">
+            <path d="M24 32V10m0 0l-9 9m9-9l9 9" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M8 30v6a6 6 0 006 6h20a6 6 0 006-6v-6" stroke="currentColor" stroke-width="3"
+                  stroke-linecap="round" fill="none"/>
+          </svg>
+          <p class="dropzone-title">点击选择图片，或拖拽 / 粘贴到此处</p>
+          <p class="dropzone-hint">支持 JPG · PNG · WebP，单张不超过 10MB</p>
+          <button type="button" id="sample-btn" class="link-btn">没有图片？试试示例图</button>
+        </div>
+        <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+      </div>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+    </section>
+
+    <section id="result-panel" class="panel" hidden>
+      <div id="loading" class="loading" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <p>正在生成速写，请稍候…</p>
+      </div>
+
+      <div class="compare" id="compare-box">
+        <img id="result-img" class="layer layer-result" alt="生成的线稿" />
+        <div class="layer layer-original-wrap" id="original-clip">
+          <img id="original-img" class="layer" alt="原始图片" />
+          <span class="badge badge-left">原图</span>
+        </div>
+        <span class="badge badge-right">线稿</span>
+        <input id="compare-range" class="compare-range" type="range" min="0" max="100"
+               value="50" aria-label="拖动对比原图与线稿" />
+      </div>
+
+      <div class="actions">
+        <button id="download-btn" class="btn btn-primary" type="button">下载线稿 PNG</button>
+        <button id="reset-btn" class="btn" type="button">再传一张</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>图片仅在内存中处理，不会被服务器保存。线稿模型基于
+      <a href="https://github.com/xavysp/TEED" target="_blank" rel="noopener">TEED</a> /
+      <a href="https://huggingface.co/TheMistoAI/MistoLine" target="_blank" rel="noopener">AnyLine</a>
+      开源方案。</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

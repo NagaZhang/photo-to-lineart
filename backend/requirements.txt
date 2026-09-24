@@ -1,0 +1,9 @@
+# Runtime dependencies (CPU inference image). No PyTorch here.
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+python-multipart>=0.0.9,<1.0
+onnxruntime>=1.19,<2.0
+numpy>=1.26,<3.0
+pillow>=10,<12
+# Image preprocessing kept pixel-identical to the controlnet_aux reference
+opencv-python-headless>=4.10,<5.0

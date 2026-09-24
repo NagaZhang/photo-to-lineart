@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: photo-to-lineart
+    runtime: docker
+    plan: free
+    dockerfilePath: deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: OMP_NUM_THREADS
+        value: "2"
+      - key: LINEART_CPU_ARENA
+        value: "0"
+      - key: LINEART_RESOLUTION
+        value: "704"
